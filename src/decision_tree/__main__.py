@@ -37,6 +37,10 @@ def run(binary_entropy_mode: bool) -> None:
     print('Predict:')
     print(predict)
 
+    accuracy = np.equal(lables, predict).mean()
+    print("Accuracy:")
+    print(accuracy)
+
 
 def main():
     binary_entropy_mode = False

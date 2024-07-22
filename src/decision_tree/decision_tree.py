@@ -56,7 +56,7 @@ class DecisionTree:
         max_index += [1] * (2 ** self.layers)
 
         best_index = index.copy()
-        best_goods = self.goods(values, lables)
+        best_goods = self._goods(values, lables)
 
         print("best_goods", best_goods)
 
@@ -80,7 +80,7 @@ class DecisionTree:
             nodes[current].value = index[current]
 
             # check if is better
-            current_goods = self.goods(values, lables)
+            current_goods = self._goods(values, lables)
             if current_goods > best_goods:
                 best_goods = current_goods
                 best_index = index.copy()
@@ -136,7 +136,7 @@ class DecisionTree:
 
         return node.value
 
-    def goods(self, values: np.ndarray, lables: np.ndarray) -> int:
+    def _goods(self, values: np.ndarray, lables: np.ndarray) -> int:
         pred = self.predict(values)
 
         return np.equal(lables, pred).sum()
