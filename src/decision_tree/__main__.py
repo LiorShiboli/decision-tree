@@ -25,11 +25,17 @@ def load_data(file_path: str) -> tuple[np.ndarray, np.ndarray]:
 def run(binary_entropy_mode: bool) -> None:
     values, lables = load_data(INPUT_PASTH)
 
-    model = DecisionTree()
+    model = DecisionTree(3)
+    print('fit:')
     model.fit(values, lables, binary_entropy_mode)
+    print()
 
-    res = model.predict(values)
-    print(res)
+    print("Tree:")
+    print(model.root, '\n')
+
+    predict = model.predict(values)
+    print('Predict:')
+    print(predict)
 
 
 def main():
