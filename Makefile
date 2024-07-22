@@ -40,4 +40,4 @@ run-brute-force:
 	python -m decision_tree brute-force
 
 run-binary-entropy:
-	python -m decision_tree binary_entropy
+	python -m decision_tree binary-entropy
