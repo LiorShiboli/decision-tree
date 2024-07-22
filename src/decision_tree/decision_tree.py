@@ -33,12 +33,22 @@ class Node:
 class DecisionTree:
     layers: int
     root: Node
+    trained: bool
+    input_size: int
 
     def __init__(self, layers: int) -> None:
         self.layers = layers
         self.root = Node()
+        self.trained = False
+        self.input_size = 0
 
     def fit(self, values: np.ndarray, lables: np.ndarray, binary_entropy_mode: bool) -> None:
+        if self.trained:
+            raise Exception("Cannot train twice")
+
+        self.trained = True
+        self.input_size = values.shape[1]
+
         if binary_entropy_mode:
             self._fit_binary_entropy(values, lables)
         else:
@@ -97,7 +107,67 @@ class DecisionTree:
             node.value = value
 
     def _fit_binary_entropy(self, values: np.ndarray, lables: np.ndarray) -> None:
-        self._create_tree(self.root, 0)
+        self._fit_binary_entropy_layers(values, lables, self.root, 0)
+
+    def _fit_binary_entropy_layers(self, values: np.ndarray, lables: np.ndarray, node: Node, layer: int) -> None:
+        if layer == self.layers:
+            if (lables == 1).sum() > (lables == 0).sum():
+                node.value = 1
+            else:
+                node.value = 0
+            return
+
+        node.left = Node()
+        node.right = Node()
+
+        best_dim = self._fit_binary_entropy_best_dim(values, lables)
+        node.value = best_dim
+
+        left_values = values[values[:, best_dim] == 0]
+        left_lables = lables[values[:, best_dim] == 0]
+        right_values = values[values[:, best_dim] == 1]
+        right_lables = lables[values[:, best_dim] == 1]
+
+        only_zero = len(left_lables[left_lables == 0])
+        if only_zero == 0:
+            node.left.value = 1
+        elif only_zero == len(left_lables):
+            node.left.value = 0
+        else:
+            self._fit_binary_entropy_layers(left_values, left_lables, node.left, layer + 1)
+
+        only_zero = len(right_lables[right_lables == 0])
+        if only_zero == 0:
+            node.left.value = 1
+        elif only_zero == len(right_lables):
+            node.right.value = 0
+        else:
+            self._fit_binary_entropy_layers(right_values, right_lables, node.right, layer + 1)
+
+    def _fit_binary_entropy_best_dim(self, values: np.ndarray, lables: np.ndarray) -> int:
+        best_dim = 0
+
+        # 1 - meain -infity
+        best_cost = 1
+
+        for dim in range(values.shape[1]):
+            cost = 0
+            for val, lable in [[0, 0], [0, 1], [1, 0], [1, 1]]:
+                part = values[values[:, dim] == val]
+                part_lable = values[(values[:, dim] == val) & (lables == lable)]
+
+                # v_0_l_0 v_0_l_1 v_1_l_0 v_1_l_1   - part_lable
+                # f(x) = len(x) / len(part)
+                # cost = 0 -
+
+                if len(part) > 0:
+                    cost -= (len(part_lable) / len(part)) * np.log2(len(part_lable) / len(part))
+
+            if best_cost == 1 or best_cost < cost:
+                best_dim = dim
+                best_cost = cost
+
+        return best_dim
 
     def _create_tree(self, parent: Node, layer: int):
         if layer == self.layers:
@@ -110,6 +180,9 @@ class DecisionTree:
         self._create_tree(parent.right, layer + 1)
 
     def predict(self, values: np.ndarray) -> np.ndarray | int:
+        if not self.trained:
+            raise Exception("Need to train first")
+
         single_mode = len(values.shape) == 1
 
         if single_mode:
@@ -124,15 +197,12 @@ class DecisionTree:
 
     def _predict_one(self, value: np.ndarray) -> int:
         node = self.root
-        layer = 0
 
-        while layer < self.layers:
+        while node.left is not None:
             if value[node.value] == 1:
                 node = node.right
             else:
                 node = node.left
-
-            layer += 1
 
         return node.value
 
