@@ -18,10 +18,16 @@ poetry install
 
 # Get Started
 
-Opening the Jupter Lab:
+In terminal run the folowing commend for brute-force mode
 
 ```bash
-python -m decision_tree
+python -m decision_tree brute-force
+```
+
+In terminal run the folowing commend for binary-entropy mode
+
+```bash
+python -m decision_tree binary-entropy
 ```
 
 ## CI (Formaters and Linters)

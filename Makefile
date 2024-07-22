@@ -33,5 +33,11 @@ lint: flake8 black-check mypy
 fix-lint: fix lint
 
 # Run the tests
-run:
+run-help:
 	python -m decision_tree
+
+run-brute-force:
+	python -m decision_tree brute-force
+
+run-binary-entropy:
+	python -m decision_tree binary_entropy

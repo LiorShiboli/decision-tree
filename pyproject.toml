@@ -7,7 +7,8 @@ packages = [{include = "decision_tree", from="src"}]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
+python = ">=3.11,<3.12"
+numpy = "^2.0.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"
