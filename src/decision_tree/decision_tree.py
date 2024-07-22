@@ -56,9 +56,9 @@ class DecisionTree:
         max_index += [1] * (2 ** self.layers)
 
         best_index = index.copy()
-        best_accuracy = self.goods(values, lables)
+        best_goods = self.goods(values, lables)
 
-        print("best_accuracy", best_accuracy)
+        print("best_goods", best_goods)
 
         loops = 1
         for item in max_index:
@@ -80,11 +80,11 @@ class DecisionTree:
             nodes[current].value = index[current]
 
             # check if is better
-            current_accuracy = self.goods(values, lables)
-            if current_accuracy > best_accuracy:
-                best_accuracy = current_accuracy
+            current_goods = self.goods(values, lables)
+            if current_goods > best_goods:
+                best_goods = current_goods
                 best_index = index.copy()
-                print("best_accuracy", best_accuracy)
+                print("best_goods", best_goods)
 
             if (loop % (10**5)) == 0:
                 now = datetime.now()
@@ -138,9 +138,8 @@ class DecisionTree:
 
     def goods(self, values: np.ndarray, lables: np.ndarray) -> int:
         pred = self.predict(values)
-        bad = ((pred - lables) ** 2).sum()
 
-        return len(lables) - bad
+        return np.equal(lables, pred).sum()
 
 
 def _create_nodes_list(root: Node) -> list[Node]:
