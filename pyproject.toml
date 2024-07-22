@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "decision-tree"
+version = "0.1.0"
+description = "decision-tree"
+authors = ["Lior Shiboli <Lior12sh@gmail.com>", "Omer Priel <omer.priel2@gmail.com>"]
+packages = [{include = "decision_tree", from="src"}]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+black = "^23.12.1"
+flake8 = "^6.1.0"
+mypy = "^1.8.0"
+jupyterlab = "^4.0.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py311']
+line-length = 140
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.git
+    | \.mypy_cache
+  )/
+)
+'''
+
+[tool.isort]
+line_length=140
+multi_line_output=3
+include_trailing_comma="True"
