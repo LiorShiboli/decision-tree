@@ -25,7 +25,7 @@ def load_data(file_path: str) -> tuple[np.ndarray, np.ndarray]:
 def run(binary_entropy_mode: bool) -> None:
     values, lables = load_data(INPUT_PASTH)
 
-    model = DecisionTree(3)
+    model = DecisionTree(2)
     print('fit:')
     model.fit(values, lables, binary_entropy_mode)
     print()
@@ -40,6 +40,11 @@ def run(binary_entropy_mode: bool) -> None:
     accuracy = np.equal(lables, predict).mean()
     print("Accuracy:")
     print(accuracy)
+
+    goods = np.equal(lables, predict).sum()
+    bads = np.not_equal(lables, predict).sum()
+    print("Goods / Bads:")
+    print(goods, '/', bads)
 
 
 def main():

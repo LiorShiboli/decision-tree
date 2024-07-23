@@ -1,5 +1,4 @@
 from typing import Self
-from datetime import datetime
 
 import numpy as np
 
@@ -74,7 +73,6 @@ class DecisionTree:
         for item in max_index:
             loops *= item + 1
 
-        start_at = datetime.now()
         loop = 0
         while loop < loops:
             # change index
@@ -96,8 +94,6 @@ class DecisionTree:
                 best_index = index.copy()
                 print("best_goods", best_goods)
 
-            if (loop % (10**5)) == 0:
-                print(("%.3f" % (datetime.now() - start_at).total_seconds()) + "[s]", ("%.3f" % (100 * loop / loops)) + "%")
             loop += 1
 
         # create the best tree
