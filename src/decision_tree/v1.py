@@ -1,3 +1,25 @@
+# V1 only for parale
+
+import numpy as np
+
+
+INPUT_PASTH = './data/vectors.txt'
+
+
+def load_data(file_path: str) -> tuple[np.ndarray, np.ndarray]:
+    with open(file_path, 'r') as f:
+        data = f.read()
+
+    arr = [[int(item) for item in line.split(' ') if item != ''] for line in data.split('\n') if len(line) > 0]
+
+    full = np.array(arr)
+
+    values = full[:, :-1]
+    lables = full[:, -1]
+
+    return values, lables
+
+
 from typing import Self
 from datetime import datetime
 
@@ -224,3 +246,27 @@ def _create_nodes_list(root: Node) -> list[Node]:
             to_visit.append(node.right)
 
     return nodes
+
+
+def main():
+    values, lables = load_data(INPUT_PASTH)
+
+    model = DecisionTree(3)
+    print('fit:')
+    model.fit(values, lables, binary_entropy_mode=False)
+    print()
+
+    print("Tree:")
+    print(model.root, '\n')
+
+    predict = model.predict(values)
+    print('Predict:')
+    print(predict)
+
+    accuracy = np.equal(lables, predict).mean()
+    print("Accuracy:")
+    print(accuracy)
+
+
+if __name__ == '__main__':
+    main()
