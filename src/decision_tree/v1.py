@@ -1,5 +1,9 @@
 # V1 only for parale
 
+from typing import Self
+from datetime import datetime
+from multiprocessing import Pool
+
 import numpy as np
 
 
@@ -18,12 +22,6 @@ def load_data(file_path: str) -> tuple[np.ndarray, np.ndarray]:
     lables = full[:, -1]
 
     return values, lables
-
-
-from typing import Self
-from datetime import datetime
-
-import numpy as np
 
 
 class Node:
@@ -64,7 +62,7 @@ class DecisionTree:
         self.trained = False
         self.input_size = 0
 
-    def fit(self, values: np.ndarray, lables: np.ndarray, binary_entropy_mode: bool) -> None:
+    def fit(self, values: np.ndarray, lables: np.ndarray, binary_entropy_mode: bool, workers: int = 1, worker_id: int = 0) -> None:
         if self.trained:
             raise Exception("Cannot train twice")
 
@@ -74,9 +72,9 @@ class DecisionTree:
         if binary_entropy_mode:
             self._fit_binary_entropy(values, lables)
         else:
-            self._fit_brute_force(values, lables)
+            self._fit_brute_force(values, lables, workers, worker_id)
 
-    def _fit_brute_force(self, values: np.ndarray, lables: np.ndarray) -> None:
+    def _fit_brute_force(self, values: np.ndarray, lables: np.ndarray, workers: int, worker_id: int) -> None:
         self._create_tree(self.root, 0)
 
         indexs_len = (2 ** (self.layers + 1)) - 1
@@ -84,43 +82,59 @@ class DecisionTree:
 
         index = [0] * indexs_len
         nodes = _create_nodes_list(self.root)
-        max_index = [dim - 1] * ((2 ** self.layers) - 1)
+        max_index: list[int] = [dim - 1] * ((2 ** self.layers) - 1)
         max_index += [1] * (2 ** self.layers)
 
         best_index = index.copy()
         best_goods = self._goods(values, lables)
 
-        print("best_goods", best_goods)
+        print(f"{worker_id}: best_goods - {best_goods}")
 
         loops = 1
         for item in max_index:
             loops *= item + 1
 
-        start_at = datetime.now()
-        loop = 0
-        while loop < loops:
-            # change index
+        loop = worker_id
+
+        for _ in range(worker_id):
             current = len(max_index) - 1
             while index[current] == max_index[current]:
                 index[current] = 0
                 nodes[current].value = index[current]
                 current -= 1
-                if current == -1:
-                    break
-
             index[current] += 1
             nodes[current].value = index[current]
+
+        start_at = datetime.now()
+        while loop < loops:
+            # change index
+            for _ in range(workers):
+                current = len(max_index) - 1
+                while index[current] == max_index[current]:
+                    index[current] = 0
+                    nodes[current].value = index[current]
+                    current -= 1
+                    if current == -1:
+                        break
+                if current == -1:
+                    break
+                index[current] += 1
+                nodes[current].value = index[current]
+
+            if current == -1:
+                break
 
             # check if is better
             current_goods = self._goods(values, lables)
             if current_goods > best_goods:
                 best_goods = current_goods
                 best_index = index.copy()
-                print("best_goods", best_goods)
+                print(f"{worker_id}: best_goods - {best_goods}")
+                print(str(self.root))
 
             if (loop % (10**5)) == 0:
-                print(("%.3f" % (datetime.now() - start_at).total_seconds()) + "[s]", ("%.3f" % (100 * loop / loops)) + "%")
-            loop += 1
+                print(f"{worker_id}:", ("%.3f" % (datetime.now() - start_at).total_seconds()) + "[s]", ("%.3f" % (100 * loop / loops)) + "%")
+            loop += workers
 
         # create the best tree
         for node, value in zip(nodes, best_index):
@@ -226,6 +240,11 @@ class DecisionTree:
 
         return node.value
 
+    def accuracy(self, values: np.ndarray, lables: np.ndarray) -> float:
+        pred = self.predict(values)
+
+        return np.equal(lables, pred).mean()
+
     def _goods(self, values: np.ndarray, lables: np.ndarray) -> int:
         pred = self.predict(values)
 
@@ -248,14 +267,35 @@ def _create_nodes_list(root: Node) -> list[Node]:
     return nodes
 
 
-def main():
+def worker(worker_id: int) -> DecisionTree:
     values, lables = load_data(INPUT_PASTH)
 
     model = DecisionTree(3)
-    print('fit:')
-    model.fit(values, lables, binary_entropy_mode=False)
-    print()
+    print(f"{worker_id}: fit:")
+    model.fit(values, lables, binary_entropy_mode=False, workers=16, worker_id=worker_id)
+    return model
 
+
+def main():
+    values, lables = load_data(INPUT_PASTH)
+
+    with Pool(5) as p:
+        models = list(p.map(worker, range(16)))
+
+    print("\nEND FIT workers!\n")
+
+    model = models[0]
+    accuracy = models[0].accuracy(values, lables)
+
+    for worker_id, current_model in enumerate(models):
+        current_accuracy = current_model.accuracy(values, lables)
+        print("Worker:", worker_id, "Accuracy:", current_accuracy)
+        print(current_model.root, '\n')
+        if current_accuracy > accuracy:
+            model = current_model
+            accuracy = current_accuracy
+
+    print("\n\nBest Model:")
     print("Tree:")
     print(model.root, '\n')
 
