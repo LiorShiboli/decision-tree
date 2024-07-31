@@ -20,9 +20,9 @@ class Node:
         left_value = str(self.left)
         right_value = str(self.right)
 
-        l = len(left_value.split('\n')[0])
+        space_length = len(left_value.split('\n')[0]) + 1
 
-        ret = (' ' * l) + ' ' + str(self.value) + ' ' + (' ' * l)
+        ret = (' ' * space_length) + str(self.value) + (' ' * space_length)
         for line1, line2 in zip(left_value.split('\n'), right_value.split('\n')):
             ret += '\n ' + line1 + ' ' + line2 + ' '
 
@@ -141,23 +141,19 @@ class DecisionTree:
     def _fit_binary_entropy_best_dim(self, values: np.ndarray, lables: np.ndarray) -> int:
         best_dim = 0
 
-        # 1 - meain -infity
-        best_cost = 1
+        best_cost = 0
 
         for dim in range(values.shape[1]):
-            cost = 0
+            cost = 1
             for val, lable in [[0, 0], [0, 1], [1, 0], [1, 1]]:
-                part = values[values[:, dim] == val]
-                part_lable = values[(values[:, dim] == val) & (lables == lable)]
+                part = values[:, dim] == val
+                part_values = values[part]
+                part_lable = values[part & (lables == lable)]
 
-                # v_0_l_0 v_0_l_1 v_1_l_0 v_1_l_1   - part_lable
-                # f(x) = len(x) / len(part)
-                # cost = 0 -
+                if len(part_values) > 0:
+                    cost += (len(part_lable) / len(part_values)) * np.log2(len(part_lable) / len(part_values))
 
-                if len(part) > 0:
-                    cost -= (len(part_lable) / len(part)) * np.log2(len(part_lable) / len(part))
-
-            if best_cost == 1 or best_cost < cost:
+            if best_cost < cost:
                 best_dim = dim
                 best_cost = cost
 
